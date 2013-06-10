@@ -8,13 +8,32 @@ $(function(){
 	});
 	
 	$("body").on("click", "#upload", function(){
+		var self = $(this);
 		var form = new FormData();
-		var files = $("#files").get(0).files[0];
-		form.append(files, files.name)
-		superagent
-		.post('/upload')
-		.field(files, files.name)
-		.end(console.log)
+		var files = $("#files").get(0).files;
+		if(!files.length){
+			return alert('no files selected');
+		}
+		for(var i=0; i<files.length; i++){
+			var file = files[i];
+			form.append(file.name, file);
+		}
+		self.attr('disabled', 'disabled');
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST','/upload');
+		var progressBar = document.querySelector('#uploading-value');
+		xhr.upload.onprogress = function(e) {
+			console.log(e);
+			if (e.lengthComputable) {
+				progressBar.innerHTML = (((e.loaded / e.total) * 100) << .1) + "%";
+			}
+		};
+		xhr.onreadystatechange = function(){
+			if(xhr.readyState == 4 && xhr.status == 200){
+				self.removeAttr('disabled');
+			}
+		}
+		xhr.send(form);
 	});
 	$("#newuser_create").click(function(){
 		var fullname = $("#newuser_realname").val();

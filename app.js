@@ -5,7 +5,6 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , user = require('./routes/user')
   , http = require('http')
   , passport = require('passport')
   , mongoose = require('mongoose')
@@ -15,6 +14,7 @@ var express = require('express')
   , jade_browser = require('jade-browser')
   , crypto = require('crypto')
   , path = require('path')
+  , _ = require('underscore')
 
 //settings
 var settings = require("./settings");
@@ -22,6 +22,7 @@ var settings = require("./settings");
 //db schemas
 db = mongoose.createConnection(settings.connection.host, settings.connection.db);
 var User = require("./lib/User");
+var File = require("./lib/File");
 
 //email
 nodemailer.SMTP = {
@@ -84,7 +85,7 @@ app.configure(function(){
 	app.use(express.favicon());
 	app.use(express.logger('dev'));
 	app.use(express.cookieParser(settings.cookie));
-	app.use(express.bodyParser());
+	app.use(express.bodyParser({ uploadDir: settings.save }));
 	app.use(express.methodOverride());
 	app.use(jade_browser('/templates.js', '**', {root: __dirname + '/views/components', cache:false}));	  
 	app.use(express.session({ secret: settings.cookie, store: sessionStore, cookie: { maxAge: 1000 * 60 * 60 * 7 * 1000 ,httpOnly: false, secure: false}}));
@@ -126,7 +127,7 @@ app.post('/register', /*Authenticate, */ function(req, res){
 	var fullname = req.body.fullname;
 	var password = "welcome";
 	var type = req.body.type;
-	if(fullname == "" || !fullname || username == "" || !username || password == "" || !password){
+	if(fullname == "" || !fullname || username == "" || !username){
 		return res.json({error:"unable to register"});
 	}
 	if(!type){
@@ -155,6 +156,20 @@ app.get('/', function(req,res){
 	}else{
 		res.render('login');
 	}
+});
+app.post('/upload', Authenticate, function(req,res){
+	var files = [];
+	var ip = req.ip;
+	var date = new Date();
+	var user = req.user._id;
+	for(var file in req.files){
+		var f = {};
+		f.file = req.files[file].name;
+		f.path = req.files[file].path;
+		f.size = req.files[file].size;
+		files.push(f);
+	}
+	res.end();
 });
 
 
