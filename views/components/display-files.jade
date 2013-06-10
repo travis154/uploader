@@ -1,0 +1,19 @@
+-var total_size=0;
+table.table.table-bordered
+	thead
+		tr
+			th #
+			th File
+			th Size
+	tbody
+		-each file, i in files
+			-total_size += file.size
+			tr
+				td=(i+1)
+				td=file.name
+				td #{file.size} kb
+section.well
+	span
+		|uploading #{files.length} files (#{total_size} kb)
+	button.btn.pull-right.btn-primary#upload Upload
+		

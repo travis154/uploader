@@ -1,0 +1,44 @@
+extends layout
+
+block content
+	//modals
+	-if(locals.user.type == 'administrator')
+		include modals/register
+	div.container
+		div#menu
+			-if(locals.user.type == 'administrator')
+				a(href="#register", role="button", data-toggle="modal") register
+				span &nbsp;  
+			a(href='/logout') logout 
+		div.header
+			h1 Uploader
+			p Share files with Allied
+			div.fileupload.fileupload-new(data-provides='fileupload')
+				a.btn.btn-primary.btn-file
+					span.fileupload-new Select files to upload
+					span.fileupload-exists Change
+					input(type='file', multiple='multiple')#files
+		section.row
+			div.span4
+				h3 My files
+		section.row
+			div.span4
+				section.file-listing
+					h4 #20
+					h5 ADK
+					p 6 files
+				section.file-listing
+					h4 #19
+					h5 ADK
+					p 6 files
+				section.file-listing.active
+					h4 #18
+					h5 ADK
+					p 6 files
+				section.file-listing
+					h4 #17
+					h5 ADK
+					p 6 files
+				button(type='button').btn-primary.btn-block Load more
+			div.span5#display
+
