@@ -15,14 +15,28 @@ var express = require('express')
   , crypto = require('crypto')
   , path = require('path')
   , _ = require('underscore')
+  , racker = require('racker')
+  , async = require('async')
+  , fs = require('fs')
+  , moment = require('moment')
+  //, formidable = require('formidable')
+  //, request = require('superagent')
+
+
 
 //settings
 var settings = require("./settings");
-
+cdn_url = settings.rackspace.cdn_url;
 //db schemas
 db = mongoose.createConnection(settings.connection.host, settings.connection.db);
 var User = require("./lib/User");
 var File = require("./lib/File");
+
+//rackspace
+racker
+.set('user', settings.rackspace.user)
+.set('key', settings.rackspace.key);
+
 
 //email
 nodemailer.SMTP = {
@@ -42,6 +56,8 @@ function hashMatch(hash, password){
 var sessionStore = new MongoStore({db:settings.connection.db});
 
 var app = express();
+
+
 
 passport.use(new LocalStrategy({
 		usernameField: 'username',
@@ -86,6 +102,9 @@ app.configure(function(){
 	app.use(express.logger('dev'));
 	app.use(express.cookieParser(settings.cookie));
 	app.use(express.bodyParser({ uploadDir: settings.save }));
+	//app.use(express.json());
+	//app.use(express.urlencoded());
+	//app.use(express.multipart()); // Remove this line
 	app.use(express.methodOverride());
 	app.use(jade_browser('/templates.js', '**', {root: __dirname + '/views/components', cache:false}));	  
 	app.use(express.session({ secret: settings.cookie, store: sessionStore, cookie: { maxAge: 1000 * 60 * 60 * 7 * 1000 ,httpOnly: false, secure: false}}));
@@ -140,6 +159,7 @@ app.post('/register', /*Authenticate, */ function(req, res){
 		}
 		var user = new User({
 			username:username, 
+			fullname:fullname,
 			password:password_hashed,
 			type:type,
 			registered_date: new Date()
@@ -152,24 +172,77 @@ app.post('/register', /*Authenticate, */ function(req, res){
 });
 app.get('/', function(req,res){
 	if (req.isAuthenticated()) {
-		res.render('index');
+		File
+		.find({user:req.user._id},{ip:0, __v:0})
+		.populate('user', '_id username')		
+		.sort({batch:-1})
+		.exec(function(err, batch){
+			if(err) throw err;
+			batch = JSON.parse(JSON.stringify(batch));
+			for(var i=0; i<batch.length; i++){
+				batch[i].date = moment(batch[i].date).fromNow();
+				for(var f = 0; f<batch[i].files.length; f++){
+					batch[i].files[f].url = cdn_url + "/" + batch[i].files[f].file
+				}
+			}
+			res.render('index', {batch:batch});
+		});
 	}else{
 		res.render('login');
 	}
 });
-app.post('/upload', Authenticate, function(req,res){
+app.post('/upload', authenticate, function(req,res){
+
 	var files = [];
 	var ip = req.ip;
 	var date = new Date();
 	var user = req.user._id;
-	for(var file in req.files){
-		var f = {};
-		f.file = req.files[file].name;
-		f.path = req.files[file].path;
-		f.size = req.files[file].size;
-		files.push(f);
-	}
-	res.end();
+	var _files = _.keys(req.files);
+	async.eachLimit(
+		_files,
+		4,
+		function(file, done){
+		
+			var f = {};
+			f.path = req.files[file].path;
+			f.file = f.path.split("/")[1] + "_" + req.files[file].name;
+			f.name = req.files[file].name;
+			f.size = req.files[file].size;
+			console.log(f);
+			files.push(f);
+			racker
+			.upload(fs.createReadStream(f.path))
+			.to('aasandha uploads')
+			.as(f.file)
+			.on('progress', console.log)
+			.end(function(){
+				fs.unlink(f.path, function(){});
+				done(null, null);
+			});		
+		},
+		function(){
+			//find batch of user
+			File
+			.findOne({user:user})
+			.sort({batch:-1})
+			.exec(function(err, file){
+				if(err) throw err;
+				var batch;
+				if(!file){
+					batch = 1;
+				}else{
+					batch = file.batch + 1;
+				}
+				var f = new File({files:files, batch:batch, user:user, ip:ip, date:date})
+				.save(function(err, file){
+					if(err) throw err;
+					res.json(file);
+				});
+			});
+		
+		}
+	);
+
 });
 
 

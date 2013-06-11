@@ -26,22 +26,9 @@ block content
 				section#file-listing-uploading.header
 					h1#uploading-value 0%
 					h2 Uploading
-				section.file-listing
-					h4 #20
-					h5 ADK
-					p 6 files
-				section.file-listing
-					h4 #19
-					h5 ADK
-					p 6 files
-				section.file-listing.active
-					h4 #18
-					h5 ADK
-					p 6 files
-				section.file-listing
-					h4 #17
-					h5 ADK
-					p 6 files
-				button(type='button').btn-primary.btn-block Load more
+				section#files-listing
+					-each item in batch
+						include components/file-listing
+					button(type='button').btn-primary.btn-block Load more
 			div.span5#display
 

@@ -22,8 +22,8 @@ $(function(){
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST','/upload');
 		var progressBar = document.querySelector('#uploading-value');
+		xhr.setRequestHeader('Accept', 'application/json');
 		xhr.upload.onprogress = function(e) {
-			console.log(e);
 			if (e.lengthComputable) {
 				progressBar.innerHTML = (((e.loaded / e.total) * 100) << .1) + "%";
 			}
@@ -31,9 +31,26 @@ $(function(){
 		xhr.onreadystatechange = function(){
 			if(xhr.readyState == 4 && xhr.status == 200){
 				self.removeAttr('disabled');
+				try{
+					var res = JSON.parse(xhr.responseText);
+					if(res.error){
+						alert(res.error);
+					}else{
+						$("#file-listing-uploading").slideUp();
+					}
+				}catch(e){
+					console.log(e);
+				}
 			}
 		}
+		$("#file-listing-uploading").slideDown();
 		xhr.send(form);
+	});
+	$("body").on('click', '.file-listing', function(){
+		$(".file-listing").removeClass("active");
+		$(this).addClass("active");
+		var data = $(this).data().data;
+		$("#display").html(jade.render('display-files-uploaded', {files:data.files}));
 	});
 	$("#newuser_create").click(function(){
 		var fullname = $("#newuser_realname").val();

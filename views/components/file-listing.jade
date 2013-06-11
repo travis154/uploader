@@ -1,0 +1,7 @@
+section.file-listing(data-data=JSON.stringify(item))
+	section
+		strong.bignum ##{item.batch}
+		strong by #{item.user.username} #{item.date}
+	section.file-listing-files-container
+		a.btn.btn-block #{item.files.length} files
+

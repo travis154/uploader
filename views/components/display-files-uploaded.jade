@@ -1,0 +1,13 @@
+table.table.table-bordered
+	thead
+		tr
+			th #
+			th File
+			th Size
+	tbody
+		-each file, i in files
+			tr
+				td=(i+1)
+				td
+					a(href=file.url, target='_blank')=file.name
+				td #{file.size} kb
