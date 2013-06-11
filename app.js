@@ -100,7 +100,8 @@ app.configure(function(){
 	app.set('view engine', 'jade');
 	app.use(express.favicon());
 	app.use(express.logger('dev'));
-	app.use(express.cookieParser(settings.cookie));
+    app.use(express.compress());
+  	app.use(express.cookieParser(settings.cookie));
 	app.use(express.bodyParser({ uploadDir: settings.save }));
 	//app.use(express.json());
 	//app.use(express.urlencoded());
