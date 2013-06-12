@@ -45,6 +45,9 @@ $(function(){
 				}catch(e){
 					console.log(e);
 				}
+			}else{
+				alert("Unable to upload");
+				window.location.reload(true);
 			}
 		}
 		$("#file-listing-uploading").slideDown();

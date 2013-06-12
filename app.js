@@ -103,6 +103,7 @@ app.configure(function(){
 	app.use(express.logger('dev'));
     app.use(express.compress());
   	app.use(express.cookieParser(settings.cookie));
+	app.use(express.limit(settings.max_upload_size));
 	app.use(express.bodyParser({ uploadDir: settings.save }));
 	//app.use(express.json());
 	//app.use(express.urlencoded());
@@ -194,7 +195,7 @@ app.get('/', function(req,res){
 	}
 });
 app.post('/upload', authenticate, function(req,res){
-
+	console.log(req.form);
 	var files = [];
 	var ip = req.ip;
 	var date = new Date();
