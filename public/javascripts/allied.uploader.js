@@ -27,6 +27,9 @@ $(function(){
 			if (e.lengthComputable) {
 				progressBar.innerHTML = (((e.loaded / e.total) * 100) << .1) + "%";
 			}
+			if(e.loaded ===  e.total){
+				progressBar.innerHTML = "wait"
+			}
 		};
 		xhr.onreadystatechange = function(){
 			if(xhr.readyState == 4 && xhr.status == 200){
@@ -37,6 +40,7 @@ $(function(){
 						alert(res.error);
 					}else{
 						$("#file-listing-uploading").slideUp();
+						$("#files-listing").prepend(jade.render('file-listing', {item:res}));
 					}
 				}catch(e){
 					console.log(e);

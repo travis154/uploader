@@ -9,5 +9,6 @@ table.table.table-bordered
 			tr
 				td=(i+1)
 				td
-					a(href=file.url, target='_blank')=file.name
-				td #{file.size} kb
+					a(href="/download/" + file.file + "/" + file.name, target='_blank')=file.name
+				-var size = convert(file.size);
+				td #{size}

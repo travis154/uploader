@@ -19,6 +19,7 @@ var express = require('express')
   , async = require('async')
   , fs = require('fs')
   , moment = require('moment')
+  , request = require('request')
   //, formidable = require('formidable')
   //, request = require('superagent')
 
@@ -27,6 +28,7 @@ var express = require('express')
 //settings
 var settings = require("./settings");
 cdn_url = settings.rackspace.cdn_url;
+
 //db schemas
 db = mongoose.createConnection(settings.connection.host, settings.connection.db);
 var User = require("./lib/User");
@@ -36,7 +38,6 @@ var File = require("./lib/File");
 racker
 .set('user', settings.rackspace.user)
 .set('key', settings.rackspace.key);
-
 
 //email
 nodemailer.SMTP = {
@@ -206,7 +207,7 @@ app.post('/upload', authenticate, function(req,res){
 		
 			var f = {};
 			f.path = req.files[file].path;
-			f.file = f.path.split("/")[1] + "_" + req.files[file].name;
+			f.file = f.path.split("/")[1];
 			f.name = req.files[file].name;
 			f.size = req.files[file].size;
 			console.log(f);
@@ -235,9 +236,19 @@ app.post('/upload', authenticate, function(req,res){
 					batch = file.batch + 1;
 				}
 				var f = new File({files:files, batch:batch, user:user, ip:ip, date:date})
-				.save(function(err, file){
+				.save(function(err, batch){
 					if(err) throw err;
-					res.json(file);
+					File
+					.find({_id:batch._id},{ip:0, __v:0})
+					.populate('user', '_id username')
+					.exec(function(err, batch){		
+						batch = JSON.parse(JSON.stringify(batch));
+						for(var i=0; i<batch.length; i++){
+							batch[i].date = moment(batch[i].date).fromNow();
+						}
+						console.log(batch);
+						res.json(batch[0]);
+					});
 				});
 			});
 		
@@ -246,6 +257,24 @@ app.post('/upload', authenticate, function(req,res){
 
 });
 
+app.get('/download/:folder/:file', authenticate, function(req, res){
+	var fname = req.params.folder;
+	var file = cdn_url + "/" + fname;
+	console.log(file);
+	if(req.user.type == 'administrator'){
+		return request.get(file).pipe(res);
+	}
+	//if normal user
+	//check if file belongs to user
+	File.count({user:req.user._id, 'files.file':req.params.folder}, function(err, count){
+		if(err) throw err;
+		if(count == 0){
+			res.status(502).end("<h1>You're not authorized to download this file!</<h1>");
+		}else{
+			request.get(file).pipe(res);
+		}
+	});
+});
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
