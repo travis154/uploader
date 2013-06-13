@@ -64,13 +64,14 @@ $(function(){
 	$("#newuser_create").click(function(){
 		var fullname = $("#newuser_realname").val();
 		var username = $("#newuser_username").val();
-		if(fullname == "" || username == ""){
-			return alert("please fill name and username");
+		var email = $("#newuser_email").val();
+		if(fullname == "" || username == "" || email == ""){
+			return alert("please fill name, username and email");
 		}
 		var type = $("#newuser_type button.active").text().toLowerCase();
 		superagent
 		.post('/register')
-		.send({fullname:fullname, username:username, type:type})
+		.send({fullname:fullname, username:username, email:email, type:type})
 		.set('Accept', 'application/json')
 		.end(function(err, res){
 			var resp = res.body;

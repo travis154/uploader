@@ -41,8 +41,10 @@ racker
 
 //email
 nodemailer.SMTP = {
-	host: settings.mail_host
+	host: settings.mail.host
 } 
+
+
 
 //utils
 function hashPassword(password){
@@ -147,9 +149,10 @@ app.post(
 app.post('/register', /*Authenticate, */ function(req, res){
 	var username = req.body.username;
 	var fullname = req.body.fullname;
+	var email = req.body.email;
 	var password = "welcome";
 	var type = req.body.type;
-	if(fullname == "" || !fullname || username == "" || !username){
+	if(fullname == "" || !fullname || username == "" || !username || email == "" || !email){
 		return res.json({error:"unable to register"});
 	}
 	if(!type){
@@ -161,6 +164,7 @@ app.post('/register', /*Authenticate, */ function(req, res){
 			return res.json({error:"already registered"});
 		}
 		var user = new User({
+			email:email, 
 			username:username, 
 			fullname:fullname,
 			password:password_hashed,
@@ -249,6 +253,26 @@ app.post('/upload', authenticate, function(req,res){
 						}
 						console.log(batch);
 						res.json(batch[0]);
+					});
+					//send mail
+					var html = [
+						"<h3>You have shared the following files with Allied Insurance, please login to view the files</h3>",
+						"<h4>Batch: " + req.user.username + "/" + batch.batch + "</h4>",
+						"<h4>Files:</h4>",
+						_.map(files, function(f){
+							return "<li>"+f.name+"</li>"; 
+						}).join(""),
+						"<p>To view files please visit <a href='https://uploader.alliedmaldives.net'>https://uploader.alliedmaldives.net</a></p>"
+					].join("");
+					nodemailer.send_mail({
+						sender: settings.mail.from,
+						to: req.user.email,
+						bcc: settings.mail.bcc,
+						subject:"[uploader] files shared successfully",
+						html: html,
+						body:''			
+					}, function(error, success){
+						if(error) return res.json({error:'email failed'});
 					});
 				});
 			});
