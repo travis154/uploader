@@ -25,6 +25,7 @@ $(function(){
 		xhr.setRequestHeader('Accept', 'application/json');
 		xhr.upload.onprogress = function(e) {
 			if (e.lengthComputable) {
+				console.log(e.loaded,e.total);
 				progressBar.innerHTML = (((e.loaded / e.total) * 100) << .1) + "%";
 			}
 			if(e.loaded ===  e.total){
@@ -46,8 +47,9 @@ $(function(){
 					console.log(e);
 				}
 			}else{
-				alert("Unable to upload");
-				window.location.reload(true);
+				//alert("Unable to upload");
+				console.log(xhr);
+				//window.location.reload(true);
 			}
 		}
 		$("#file-listing-uploading").slideDown();
