@@ -19,6 +19,7 @@
     "racker": "0.0.1-alpha3",
     "async": "~0.2.9",
     "moment": "~2.0.0",
-    "request": "~2.21.0"
+    "request": "~2.21.0",
+    "expect.js": "~0.2.0"
   }
 }

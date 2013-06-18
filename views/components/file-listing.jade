@@ -2,6 +2,7 @@ section.file-listing(data-data=JSON.stringify(item))
 	section
 		strong.bignum  #{item.user.username}/#{item.batch}
 		strong #{item.date}
+		p=item.tags
 	section.file-listing-files-container
 		a.btn.btn-block #{item.files.length} files
 

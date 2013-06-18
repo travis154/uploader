@@ -9,6 +9,8 @@ block content
 			-if(locals.user.type == 'administrator')
 				a(href="#register", role="button", data-toggle="modal") register
 				span &nbsp;  
+			a(href="#change_password", role="button", data-toggle="modal") change password 
+			span &nbsp;  
 			a(href='/logout') logout 
 		div.header
 			h1 Uploader
@@ -20,7 +22,8 @@ block content
 					input(type='file', multiple='multiple')#files
 		section.row
 			div.span4
-				h3 My files
+				h3=(locals.user.type == 'normal' ?  "My files" : "All files")
+					input(type='text', placeholder='Search...')#search
 		section.row
 			div.span4
 				section#file-listing-uploading.header

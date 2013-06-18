@@ -179,10 +179,11 @@ app.post('/register', /*Authenticate, */ function(req, res){
 });
 app.get('/', function(req,res){
 	if (req.isAuthenticated()) {
+		var query = req.user.type == 'normal' ? {user:req.user._id} : {};
 		File
-		.find({user:req.user._id},{ip:0, __v:0})
+		.find(query,{ip:0, __v:0})
 		.populate('user', '_id username')		
-		.sort({batch:-1})
+		.sort({date:-1})
 		.exec(function(err, batch){
 			if(err) throw err;
 			batch = JSON.parse(JSON.stringify(batch));
@@ -198,12 +199,43 @@ app.get('/', function(req,res){
 		res.render('login');
 	}
 });
+app.post('/search', authenticate, function(req,res){
+	if(!req.body.q){
+		return res.status(502).json({error:'incorrect request'});
+	}
+	var q, search;
+	q = new RegExp(req.body.q, 'gi');
+	if(req.user.type == 'administrator'){
+		//check if the pattern matches username/1234
+		var match = req.body.q.match(/\w*\/\d/i);
+		if(match.length){
+			match = match[0];
+			var split = match.split("/");
+			search = {batch:parseInt(split[1]), username:new RegExp(split[0], 'gi')};
+			console.log(search);
+		}else{
+			search = {tags:q}
+		}
+	}else{
+		search = {tags:q, user:req.user._id};
+	}
+	File
+	.find(search,{ip:0, __v:0})
+	.populate('user', '_id username')	
+	.limit(15)	
+	.sort({date:-1})
+	.exec(function(err, batch){
+		if(err) throw err;
+		res.json(batch);
+	});
+});
 app.post('/upload', authenticate, function(req,res){
 	console.log(req.form);
 	var files = [];
 	var ip = req.ip;
 	var date = new Date();
 	var user = req.user._id;
+	var tags = req.body.tags;
 	var _files = _.keys(req.files);
 	async.eachLimit(
 		_files,
@@ -240,7 +272,7 @@ app.post('/upload', authenticate, function(req,res){
 				}else{
 					batch = file.batch + 1;
 				}
-				var f = new File({files:files, batch:batch, user:user, ip:ip, date:date})
+				var f = new File({files:files, tags:tags, batch:batch, username:req.user.username, user:user, ip:ip, date:date})
 				.save(function(err, batch){
 					if(err) throw err;
 					File

@@ -11,9 +11,11 @@ table.table.table-bordered
 			tr
 				td=(i+1)
 				td=file.name
-				td #{file.size} kb
+				td=convert(file.size)
+input(type='text', placeholder='tags, comma separated')#tags
 section.well
+	-total_size = convert(total_size)
 	span
-		|uploading #{files.length} files (#{total_size} kb)
+		|uploading #{files.length} files (#{total_size})
 	button.btn.pull-right.btn-primary#upload Upload
 		
