@@ -1,19 +1,33 @@
-div#change_password.modal.hide.fade(tabindex='-1',role='dialog',aria-hidden='true',style='display: none;')
+div#register.modal.hide.fade(tabindex='-1',role='dialog',aria-hidden='true',style='display: none;')
 	div.modal-header
 		button.close(type='button',data-dismiss='modal',aria-hidden='true') ×
-		h4 Change password
+		h4 Create new user
 	div.modal-body
 		div.form(method='post').form-horizontal
 			div.control-group
-				label.control-label New Password
+				label.control-label Name
 				div.controls
-					input(type='password')#new_password
+					input(type='text', name='realname', placeholder='Full name')#newuser_realname
 			div.control-group
-				label.control-label Confirm Password
+				label.control-label Username
 				div.controls
-					input(type='password')#new_password_confirm
+					input(type='text', name='username', placeholder='Username')#newuser_username
+			div.control-group
+				label.control-label Email
+				div.controls
+					input(type='text', name='email', placeholder='Email')#newuser_email
+			div.control-group
+				label.control-label Password
+				div.controls
+					button(type='button').btn.btn-info.active#newuser_password welcome
+			div.control-group
+				label.control-label Type
+				div.controls
+					div.btn-group(data-toggle='buttons-radio')#newuser_type
+						button(type='button').btn.active Normal
+						button(type='button').btn Administrator
 			div.control-group
 				label.control-label
 				div.controls
-					button(type='button').btn.btn-primary#newuser_create Update
+					button(type='button').btn.btn-primary#newuser_create Create
 
