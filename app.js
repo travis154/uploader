@@ -208,7 +208,7 @@ app.post('/search', authenticate, function(req,res){
 	if(req.user.type == 'administrator'){
 		//check if the pattern matches username/1234
 		var match = req.body.q.match(/\w*\/\d/i);
-		if(match.length){
+		if(match){
 			match = match[0];
 			var split = match.split("/");
 			search = {batch:parseInt(split[1]), username:new RegExp(split[0], 'gi')};
@@ -317,9 +317,21 @@ app.post('/upload', authenticate, function(req,res){
 app.get('/download/:folder/:file', authenticate, function(req, res){
 	var fname = req.params.folder;
 	var file = cdn_url + "/" + fname;
-	console.log(file);
 	if(req.user.type == 'administrator'){
-		return request.get(file).pipe(res);
+		if(settings.cache){
+			//check if file exist in cache
+			var cached = path.normalize(__dirname + "/" + settings.cache + fname);
+			return fs.exists(cached, function(exists){
+				if(exists){
+					console.log('downloading local cached version');
+					fs.createReadStream(cached).pipe(res);
+				}else{
+					request.get(file).pipe(res);
+				}
+			});
+		}else{
+			return request.get(file).pipe(res);
+		}
 	}
 	//if normal user
 	//check if file belongs to user
@@ -328,10 +340,25 @@ app.get('/download/:folder/:file', authenticate, function(req, res){
 		if(count == 0){
 			res.status(502).end("<h1>You're not authorized to download this file!</<h1>");
 		}else{
-			request.get(file).pipe(res);
+			if(settings.cache){
+				//check if file exist in cache
+				var cached = path.normalize(__dirname + "/" + settings.cache + fname);
+				console.log(cached);
+				return fs.exists(cached, function(exists){
+					if(exists){
+						console.log('downloading local cached version');
+						fs.createReadStream(cached).pipe(res);
+					}else{
+						request.get(file).pipe(res);
+					}
+				});
+			}else{
+				return request.get(file).pipe(res);
+			}
 		}
 	});
 });
+
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
